@@ -56,80 +56,67 @@ function M.get_chars(char_len)
     end
 end
 
-function M.to_char(len, searchs_backward_if_not_found, updates_direction)
-    if updates_direction then
-        M.goes_down = true
-    end
-
+function M._to_char(
+    len, searchs_backward_if_not_found, updates_direction,
+    if_line_exists, d, default_char_pos,
+    if_char_exists,
+    search_backwards,
+    goes_down
+)
     local char = M.get_chars(len)
     local char_len = string.len(char)
     local char_lower = char:lower()
     M.chars = char
     local line_number_current = M.line('.')
     local line_number = line_number_current
-    local line_number_last = M.line('$')
 
-    while line_number <= line_number_last do
+    while if_line_exists(line_number) do
         --read line
         local line_chars = M.getline(line_number):lower()
-        local char_pos = line_number == line_number_current and (M.col('.') + 1) or 1;
+        local char_pos = line_number == line_number_current and (M.col('.') + d) or
+            default_char_pos(string.len(line_chars), char_len);
         local char_pos_last = string.len(line_chars)
 
         --try to focus to the char in the line
-        while char_pos + char_len - 1 <= char_pos_last do
+        while if_char_exists(char_pos, char_len, char_pos_last) do
             if M.move_cursor_if_char_match(line_chars, line_number, char_pos, char_lower, char_len) then
                 return
             end
-            char_pos = char_pos + 1
+            char_pos = char_pos + d
         end
-
-        line_number = line_number + 1
+        line_number = line_number + d
     end
 
     if searchs_backward_if_not_found then
-        M.go_prev()
-        if updates_direction then
-            M.goes_down = false
-        end
+        search_backwards()
+    end
+
+    if updates_direction then
+        M.goes_down = goes_down
     end
 end
 
+function M.to_char(len, searchs_backward_if_not_found, updates_direction)
+    M._to_char(
+        len,
+        searchs_backward_if_not_found,
+        updates_direction,
+        function(line) return line <= M.line('$') end, 1,
+        function() return 1 end,
+        function(char_pos, char_len, char_pos_last) return char_pos + char_len - 1 <= char_pos_last end,
+        M.go_prev,
+        true
+    )
+end
+
 function M.to_char_reverse(len, searchs_backward_if_not_found, updates_direction)
-    if updates_direction then
-        M.goes_down = false
-    end
-
-    local char = M.get_chars(len)
-    local char_len = string.len(char)
-    local char_lower = char:lower()
-    M.chars = char
-    local line_number_current = M.line('.')
-    local line_number = line_number_current
-    local line_number_last = 1
-
-    while line_number >= line_number_last do
-        --read line
-        local line_chars = M.getline(line_number):lower()
-        local char_pos = (line_number == line_number_current and (M.col('.') - 1) or string.len(line_chars)) - char_len +
-            1;
-
-        --try to focus to the char in the line
-        while char_pos >= 1 do
-            if M.move_cursor_if_char_match(line_chars, line_number, char_pos, char_lower, char_len) then
-                return
-            end
-            char_pos = char_pos - 1
-        end
-
-        line_number = line_number - 1
-    end
-
-    if searchs_backward_if_not_found then
-        M.go_next()
-        if updates_direction then
-            M.goes_down = true
-        end
-    end
+    M._to_char(len, searchs_backward_if_not_found, updates_direction,
+        function(line) return line >= 1 end, -1,
+        function(line_len, char_len) return line_len - char_len + 1 end,
+        function(char_pos, char_len, char_pos_last) return char_pos >= 1 end,
+        M.go_next,
+        false
+    )
 end
 
 function M.move_cursor_if_char_match(line_chars, line_number, char_pos, char, char_len)
