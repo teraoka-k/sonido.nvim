@@ -2,29 +2,36 @@
 
 ## Abstract
 
-Sonido is **a movement technique** of Arrancar, as [bleach.fandom.com](https://bleach.fandom.com/wiki/Son%C3%ADdo) says
+Sonído is **a high-speed movement technique** as [bleach.fandom.com](https://bleach.fandom.com/wiki/Son%C3%ADdo) says
 
 > Sonído (響転ソニード, Sonīdo; Spanish for "Sound", Japanese for "Reverberating Turn") is a high-speed movement technique utilized by Hollows and Arrancar. It is equivalent to the Shinigami's Shunpo and the Quincy's Hirenkyaku, which are roughly equal in terms of speed. 
 
-Sonido.nvim is a movement technique for nvim.
+Sonído.nvim is a high-speed movement technique utilized by Vimmers.
+
 
 - **move to a word immediately**
   - `f {char1} {char2} {char3}` 
   - `s {char1} {char2}`
   - `t {char}`
   - `+Shift` **backwards**
-- **cycle through matched words**
-  - `;` next
+- **jump to symbols**
+  - `]` next 
+  - `[` prev
+    - *.rs: `fn struct impl trait`
+    - *.md: `# ## ### #### ...`
+    - *: `function`
+- **Repeat ANY movement of Sonído**
+  - `;` next (next matched chars, or next code blocks)
   - `,` prev
 
-Sonido.nvim and [easymotion](https://github.com/easymotion/vim-easymotion) are different, as 
-- the former incorporates Vim's default **`;` `,` behaviour**, which adds **extra ease** to navigation
-- the former **does not display labels**, instead lets you type exactly the first 2 or 3 letters of a word, then **immediately move to the word**, hence it's more easy to use for those who are not good at "spot the difference" type UX like me.
+Sonído and [easymotion](https://github.com/easymotion/vim-easymotion) are different, as 
+- Sonído incorporates Vim's default **`;` `,` behaviour**, which adds **extra ease** to navigation
+- Sonído **does not display labels**, instead lets you type exactly the first 2 or 3 letters of a word, then **immediately move to the word**, hence it's more easy to use for those who are not good at "spot the difference" type UX like me.
 
 That's why I created this plugin
 
 ## Motivation
-Using easy-motion, I'm **not good at picking a correct label**. Recognizing a randomly generated letter **requires a bit concentration** for me. I rather feel comfortable **just focusing to a symbol in code** and typing the first two or three letters of that word to **move there immediately**. And I'm happy if **Vim remembers my typings** and move to next or previous matches with **`;` and `,` in the same way as `f` and `t`**, which is helpful if there are multiple matches. With this plugin, all of them can be achieved.
+I'm **not good at using easy-motion**. Recognizing a randomly generated letter **requires a bit time as it's hidden before typing**. I rather feel comfortable **focusing to a visible symbols in the editor** and typing the first two or three letters to **move the cursor immediately**. And I'm happy if **Vim remembers my typings** and move to next or previous matches with **`;` and `,` in the same way as `f` and `t`**. 
 
 ## Install
 
@@ -46,23 +53,37 @@ Using easy-motion, I'm **not good at picking a correct label**. Recognizing a ra
 {
     "teraoka-k/sonido.nvim",
     config = function()
-        local s = require("sonido")
-        local km = vim.keymap
-        km.set('n', 'f', function() s.search_forward(3) end)
-        km.set('n', 'F', function() s.search_backward(3) end)
-        km.set('n', 's', function() s.search_forward(2) end)
-        km.set('n', 'S', function() s.search_backward(2) end)
-        km.set('n', 't', function() s.search_forward(1) end)
-        km.set('n', 'T', function() s.search_backward(1) end)
-        km.set('n', ';', function() s.go_next() end)
-        km.set('n', ',', function() s.go_prev() end)
+        local M = require("sonido")
+        -- move to matched chars
+        vim.keymap.set('n', 'f', function() M.char_next(3) end)
+        vim.keymap.set('n', 'F', function() M.char_prev(3) end)
+        vim.keymap.set('n', 's', function() M.char_next(2) end)
+        vim.keymap.set('n', 'S', function() M.char_prev(2) end)
+        vim.keymap.set('n', 't', function() M.char_next(1) end)
+        vim.keymap.set('n', 'T', function() M.char_prev(1) end)
+
+        -- move to symbols (language specific semantics)
+        vim.keymap.set('n', ']', M.symbol_next)
+        vim.keymap.set('n', '[', M.symbol_prev)
+        -- to move to symbols immediately
+        M.unmap_all(
+          { '[', ']' }, -- if keymaps starting with `[` or `]`
+          { 'n' }, -- and in normal mode
+          1  -- and whose length is larger than 1
+        )
+
+        -- repeat move
+        vim.keymap.set('n', ';', M.next)
+        vim.keymap.set('n', ',', M.prev)
     end
 }
 ```
 
 ## Extension
 
-you can use **any number of chars** to move to
+- move by **any number of chars**
+- unmap any keys
+- set offset when moving to matched char like Vim's default `t` key, and **any length of offset** can be used
 
 ```.lua
 {
@@ -76,6 +97,13 @@ you can use **any number of chars** to move to
         km.set('n', 'f', function() s.search_forward(5) end)
         km.set('n', 'F', function() s.search_backward(5) end)
 
+        -- ======== equal to Vim's default t =========
+        local offset = -1
+        km.set('n', 't', function() s.to_char(1, false, true, offset) end)
+
+        -- ======== very useful by itself===============
+        -- unmap all keymaps of g in normal & visual
+        M.unmap_all( { 'g' }, { 'n', 'v' }, 0)
     end
 }
 ```
