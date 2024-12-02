@@ -107,8 +107,3 @@ I'm **not good at using easy-motion**. Recognizing a randomly generated letter *
     end
 }
 ```
-
-## Limitation
-
-- **not be able to cancel the command with \<Esc>**. **PR is welcome** from anyone, just open issue for that. I appreciate your support to handle \<Esc> key correctly with Vim's built-in function `getchar`
-- only if you use **"VS-Code neovim"**, then **\<Space> key cannot be used** as a search charcter, again anyone please let me know if you find a way to work it out in VS-Code
