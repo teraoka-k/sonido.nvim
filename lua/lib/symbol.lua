@@ -5,9 +5,13 @@ local unmap = require("lib.unmap")
 
 local function new(key_prev, key_next, definitions, repeatable)
     local function next_or_prev(move)
-        local symbols = definitions[v.extension()] or definitions['_']
+        local symbols = u.map(definitions[v.extension()] or definitions['_'], function(symbol)
+            local sub, _ = symbol:gsub("[(]", "%%(")
+            sub, _ = sub:gsub("[)]", "%%)")
+            return sub
+        end)
         if symbols then
-            move(symbols, false, true, 1, repeatable)
+            move(symbols, false, true, repeatable)
         end
     end
     local function next()
@@ -28,8 +32,8 @@ local js = { 'function ', '=> ', 'class ', 'enum ' }
 local ts = u.merge(js, { 'interface ', 'type ' })
 local keyword = {
     rs = { "fn ", "struct ", "impl ", "trait " },
-    lua = { "function(", "function ", "local M = {" },
-    md = { "# " },
+    lua = { "function(", "function " },
+    md = { "#+" },
     js,
     jsx = js,
     ts,
@@ -46,7 +50,7 @@ local paren = {
     _ = { '(' }
 }
 local str = {
-    _ = { " '", ' "', ' `', "('", '("', '(`' }
+    _ = { "'.*'", '".*"', '`.*`' }
 }
 
 local function new_assign()

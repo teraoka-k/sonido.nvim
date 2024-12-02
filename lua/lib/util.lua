@@ -45,6 +45,9 @@ local M = {
     endswith = function(str, ending)
         return str:sub(- #ending) == ending
     end,
+    is_upper = function(str)
+        return string.find(str, '%u') ~= nil
+    end,
     -- number
     max = function(a, b)
         if a > b then
@@ -54,5 +57,7 @@ local M = {
         end
     end,
 }
+
+
 
 return M

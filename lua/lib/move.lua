@@ -2,6 +2,7 @@ local v = require("lib.vim")
 local s = require("lib.search")
 
 local M = {
+    is_down = true
 }
 
 function M.setup()
@@ -31,38 +32,33 @@ function M.char_prev(len)
 end
 
 function M.next()
-    (s.goes_down and M.to_char or M.to_char_reverse)({ s.chars }, false, false, 0, false)
+    (M.is_down and M.to_char or M.to_char_reverse)({ s.word }, false, false, false)
 end
 
 function M.prev()
-    (s.goes_down and M.to_char_reverse or M.to_char)({ s.chars }, false, false, 0, false)
+    (M.is_down and M.to_char_reverse or M.to_char)({ s.word }, false, false, false)
 end
 
-function M.to_char(chars_list, searchs_backward_if_not_found, updates_direction, offset, repeatable)
-    s.search(
+function M._to_char(go_back, is_down, chars_list, searchs_backward_if_not_found, updates_direction, repeatable)
+    local line, column = s.search(
         chars_list,
         searchs_backward_if_not_found,
-        updates_direction,
-        function(line) return line <= v.line('$') end, 1,
-        function() return 1 end,
-        function(char_pos, char_len, char_pos_last) return char_pos + char_len - 1 <= char_pos_last end,
-        M.prev,
-        true,
-        offset,
+        go_back,
+        is_down,
         repeatable
     )
+    v.setcursorcharpos(line, column)
+    if updates_direction then
+        M.is_down = is_down
+    end
 end
 
-function M.to_char_reverse(chars_list, searchs_backward_if_not_found, updates_direction, offset, repeatable)
-    s.search(chars_list, searchs_backward_if_not_found, updates_direction,
-        function(line) return line >= 1 end, -1,
-        function(line_len, char_len) return line_len - char_len + 1 end,
-        function(char_pos, char_len, char_pos_last) return char_pos >= 1 end,
-        M.next,
-        false,
-        offset,
-        repeatable
-    )
+function M.to_char(word_list, go_back_on_fail, updates_direction, repeatable)
+    M._to_char(M.prev, true, word_list, go_back_on_fail, updates_direction, repeatable)
+end
+
+function M.to_char_reverse(word_list, go_back_on_fail, updates_direction, repeatable)
+    M._to_char(M.next, false, word_list, go_back_on_fail, updates_direction, repeatable)
 end
 
 return M

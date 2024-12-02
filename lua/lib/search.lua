@@ -1,62 +1,71 @@
 local u = require("lib.util")
 local v = require("lib.vim")
 
+local function read_lines(start, goes_down, for_each_line)
+    local line_number = start
+    local last_line = v.line('$')
+    while (goes_down and line_number <= last_line) or (not goes_down and line_number >= 1) do
+        if for_each_line(v.getline(line_number), line_number) then
+            return true
+        end
+        line_number = line_number + (goes_down and 1 or -1)
+    end
+end
+
 local M = {
-    chars = '',
-    goes_down = true,
+    word = '',
 }
 
+
+local function is_valid_pos(pos, line_number, start_line_number, goes_down)
+    if line_number == start_line_number then
+        local current_pos = v.col('.')
+        return goes_down and pos > current_pos or not goes_down and pos < (current_pos)
+    end
+    return true
+end
+
+
 function M.search(
-    chars_list, searchs_backward_if_not_found, updates_direction,
-    if_line_exists, d, default_char_pos,
-    if_char_exists,
-    search_backwards,
+    word_list,
+    go_back_on_fail,
+    go_back,
     goes_down,
-    offset,
-    repeatable
+    repeatable,
+    line_hook,
+    match_hook
 )
-    local line_number_current = v.line('.')
-    local line_number = line_number_current
-    local chars_len_list = u.map(chars_list, function(chars) return chars:len() end)
-    local chars_lower_list = u.map(chars_list, function(chars) return chars:lower() end)
-
-    while if_line_exists(line_number) do
-        for i, chars in ipairs(chars_list) do
-            local chars_len = chars_len_list[i]
-            local chars_lower = chars_lower_list[i]
-
-            --read line
-            local line_chars = v.getline(line_number):lower()
-            local char_pos = line_number == line_number_current and (v.col('.') + d + (goes_down and 0 or -offset)) or
-                default_char_pos(line_chars:len(), chars_len);
-            local char_pos_last = line_chars:len()
-
-            --try to focus to the char in the line
-            while if_char_exists(char_pos, chars_len, char_pos_last) do
-                if line_chars:sub(char_pos, char_pos + chars_len - 1) == chars_lower then
-                    v.setcursorcharpos(line_number, char_pos + offset)
-                    if repeatable then
-                        M.chars = chars_lower
-                    end
-                    if updates_direction then
-                        M.goes_down = goes_down
-                    end
-                    return
-                end
-                char_pos = char_pos + d
+    local start_line_number = v.line('.')
+    local matched_line = start_line_number
+    local matched_column = v.col('.')
+    if not read_lines(start_line_number, goes_down, function(line, line_number)
+            local is_upper = u.map(word_list, u.is_upper)
+            if line_hook then
+                line_hook(line)
             end
+            for i, word in ipairs(word_list) do
+                if not is_upper[i] then
+                    line = line:lower()
+                end
+                local column = string.find(line, word)
+                if column and is_valid_pos(column, line_number, start_line_number, goes_down) then
+                    if match_hook and not match_hook() then
+                        return false -- continue
+                    end
+                    if repeatable then
+                        M.word = word
+                    end
+                    matched_line = line_number
+                    matched_column = column
+                    return true -- break
+                end
+            end
+        end) then
+        if go_back_on_fail then
+            go_back()
         end
-
-        line_number = line_number + d
     end
-
-    if searchs_backward_if_not_found then
-        search_backwards()
-    end
-
-    if updates_direction then
-        M.goes_down = goes_down
-    end
+    return matched_line, matched_column
 end
 
 return M
