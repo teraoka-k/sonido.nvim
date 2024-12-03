@@ -1,3 +1,10 @@
+local function max(a, b)
+    if a > b then
+        return a
+    else
+        return b
+    end
+end
 local function escape_pattern_symbols(str)
     local escape = str:gsub('%%', '%%%%')
     for _, char in ipairs({ '(', ')', '[', ']', '.', '*', '?', '+', '-', '^', '$' }) do
@@ -5,17 +12,16 @@ local function escape_pattern_symbols(str)
     end
     return escape
 end
-escape_pattern_symbols('() [] ^$ +- *?.')
 local function find_capture(str, pattern)
     local start_at, end_at, capture = string.find(str, pattern)
     if not capture then
         return start_at, end_at, capture
     end
-    print(pattern, capture)
     if start_at then
         return (start_at + string.find(str:sub(start_at), escape_pattern_symbols(capture)) - 1), end_at, capture
     end
 end
+
 
 local function find_captures(str, pattern)
     local match_list = {}
@@ -99,12 +105,13 @@ local M = {
             return b
         end
     end,
-    max = function(a, b)
-        if a > b then
-            return a
-        else
-            return b
+    max = max,
+    max_of = function(array)
+        local _max = 0
+        for _, n in ipairs(array) do
+            _max = max(n, _max)
         end
+        return _max
     end,
 }
 
