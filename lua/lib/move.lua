@@ -2,7 +2,7 @@ local v = require("lib.vim")
 local s = require("lib.search")
 
 local M = {
-    is_down = true
+    godown = true
 }
 
 function M.setup()
@@ -32,33 +32,53 @@ function M.char_prev(len)
 end
 
 function M.next()
-    (M.is_down and M.to_char or M.to_char_reverse)({ s.word }, false, false, false)
+    (M.godown and M.to_char or M.to_char_reverse)({ s.word })
 end
 
 function M.prev()
-    (M.is_down and M.to_char_reverse or M.to_char)({ s.word }, false, false, false)
+    (M.godown and M.to_char_reverse or M.to_char)({ s.word })
 end
 
-function M._to_char(go_back, is_down, chars_list, searchs_backward_if_not_found, updates_direction, repeatable)
+function M._to_char(
+    word_list,
+    godown,
+    repeatable,
+    updates_direction,
+    goback
+)
     local line, column = s.search(
-        chars_list,
-        searchs_backward_if_not_found,
-        go_back,
-        is_down,
+        word_list,
+        godown,
         repeatable
     )
-    v.setcursorcharpos(line, column)
+    if line and column then
+        v.setcursorcharpos(line, column)
+    elseif goback then
+        goback()
+    end
     if updates_direction then
-        M.is_down = is_down
+        M.godown = godown
     end
 end
 
-function M.to_char(word_list, go_back_on_fail, updates_direction, repeatable)
-    M._to_char(M.prev, true, word_list, go_back_on_fail, updates_direction, repeatable)
+function M.to_char(word_list, updates_direction, repeatable, go_back_on_fail)
+    M._to_char(
+        word_list,
+        true,
+        repeatable,
+        updates_direction,
+        go_back_on_fail and M.prev
+    )
 end
 
-function M.to_char_reverse(word_list, go_back_on_fail, updates_direction, repeatable)
-    M._to_char(M.next, false, word_list, go_back_on_fail, updates_direction, repeatable)
+function M.to_char_reverse(word_list, updates_direction, repeatable, go_back_on_fail)
+    M._to_char(
+        word_list,
+        false,
+        repeatable,
+        updates_direction,
+        go_back_on_fail and M.next
+    )
 end
 
 return M

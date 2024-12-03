@@ -16,7 +16,6 @@ local M = {
     word = '',
 }
 
-
 local function is_valid_pos(pos, line_number, start_line_number, goes_down)
     if line_number == start_line_number then
         local current_pos = v.col('.')
@@ -25,46 +24,51 @@ local function is_valid_pos(pos, line_number, start_line_number, goes_down)
     return true
 end
 
+local function find_word_pos_in_line(word, line, line_number, start_line_number, goes_down)
+    if not u.is_upper(word) then
+        line = line:lower()
+    end
+    local column = string.find(line, word)
+    if column and is_valid_pos(column, line_number, start_line_number, goes_down) then
+        return column
+    end
+end
 
+-- use hooks to add extensions and customize match conditions
+-- - hooks.line: (i: int, content: str) -> ()
+--   - called for each line. return true to stop searching
+-- - hooks.:match (line: str, column: int) -> bool
+--   - return true for pass, false to ignore this matched position
 function M.search(
     word_list,
-    go_back_on_fail,
-    go_back,
     goes_down,
     repeatable,
-    line_hook,
-    match_hook
+    hooks
 )
+    local matched_line = nil
+    local matched_column = nil
     local start_line_number = v.line('.')
-    local matched_line = start_line_number
-    local matched_column = v.col('.')
-    if not read_lines(start_line_number, goes_down, function(line, line_number)
-            local is_upper = u.map(word_list, u.is_upper)
-            if line_hook then
-                line_hook(line)
+    read_lines(start_line_number, goes_down, function(line, line_number)
+        if hooks and hooks.line then
+            local result = hooks.line(line_number, line)
+            if result ~= nil and result then
+                return true -- stop searching
             end
-            for i, word in ipairs(word_list) do
-                if not is_upper[i] then
-                    line = line:lower()
-                end
-                local column = string.find(line, word)
-                if column and is_valid_pos(column, line_number, start_line_number, goes_down) then
-                    if match_hook and not match_hook() then
-                        return false -- continue
-                    end
-                    if repeatable then
-                        M.word = word
-                    end
-                    matched_line = line_number
-                    matched_column = column
-                    return true -- break
-                end
-            end
-        end) then
-        if go_back_on_fail then
-            go_back()
         end
-    end
+        for _, word in ipairs(word_list) do
+            local column = find_word_pos_in_line(word, line, line_number, start_line_number, goes_down)
+            if column == nil or column and hooks and hooks.match and not hooks.match(line, column) then
+                goto continue --continue to the next word
+            end
+            if repeatable then
+                M.word = word
+            end
+            matched_line = line_number
+            matched_column = column
+            do return true end -- stop searching
+            ::continue::
+        end
+    end)
     return matched_line, matched_column
 end
 

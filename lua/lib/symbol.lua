@@ -8,10 +8,12 @@ local function new(key_prev, key_next, definitions, repeatable)
         local symbols = u.map(definitions[v.extension()] or definitions['_'], function(symbol)
             local sub, _ = symbol:gsub("[(]", "%%(")
             sub, _ = sub:gsub("[)]", "%%)")
+            sub, _ = sub:gsub("%[", "%%[")
+            sub, _ = sub:gsub("%]", "%%]")
             return sub
         end)
         if symbols then
-            move(symbols, false, true, repeatable)
+            move(symbols, true, repeatable)
         end
     end
     local function next()
@@ -28,23 +30,33 @@ local function new(key_prev, key_next, definitions, repeatable)
     return { next, prev }
 end
 
-local js = { 'function ', '=> ', 'class ', 'enum ' }
-local ts = u.merge(js, { 'interface ', 'type ' })
-local keyword = {
-    rs = { "fn ", "struct ", "impl ", "trait " },
-    lua = { "function(", "function " },
-    md = { "#+" },
-    js,
-    jsx = js,
-    ts,
-    tsx = ts,
-}
 local assign = {
     _ = { ' = ', '+=', '-=', '/=', '*=', '|=', '&=', '&&=', '||=', ' < ', ' > ', ' <= ', ' >= ' }
 }
-local list = {
-    lua = { '{' },
-    _ = { '[' }
+local js_class = { 'class ', 'enum ' }
+local ts_class = u.merge(js_class, { 'interface ', 'type ' })
+local class = {
+    rs = { "struct ", "impl ", "trait " },
+    js = js_class,
+    jsx = js_class,
+    ts = ts_class,
+    tsx = ts_class
+}
+local curly = {
+    _ = { '{' }
+}
+local flow = {
+    rs = { "for .* in ", "while ", "loop ", "if ", "else " },
+}
+local js = { 'function ', '(?.*)? => ' }
+local fn = {
+    rs = { "fn ", "|.*| {" },
+    lua = { "function(", "function " },
+    js,
+    jsx = js,
+    ts = js,
+    tsx = js,
+    py = { "def " }
 }
 local paren = {
     _ = { '(' }
@@ -52,21 +64,39 @@ local paren = {
 local str = {
     _ = { "'.*'", '".*"', '`.*`' }
 }
+local square = {
+    _ = { '[' }
+}
+local tag = {
+    _ = { '<' }
+}
 
 local function new_assign()
     new('=', '=', assign, true)
 end
-local function new_list()
-    new('{', '}', list, false)
+local function new_class()
+    new('H', 'L', class)
 end
-local function new_keyword()
-    new('[', ']', keyword, false)
+local function new_flow()
+    new('_', '_', flow, true)
+end
+local function new_curly()
+    new('{', '}', curly)
+end
+local function new_fn()
+    new('K', 'J', fn)
 end
 local function new_paren()
-    new('(', ')', paren, false)
+    new('(', ')', paren)
 end
 local function new_str()
-    new('"', "'", str, false)
+    new('"', "'", str)
+end
+local function new_square()
+    new('[', ']', square)
+end
+local function new_tag()
+    new('<', '>', tag)
 end
 
 local function config(definition, option, default)
@@ -81,16 +111,22 @@ end
 return {
     setup = function()
         new_assign()
-        new_list()
-        new_keyword()
+        new_class()
+        new_curly()
+        new_fn()
+        new_flow()
         new_paren()
+        new_square()
         new_str()
+        new_tag()
     end,
-    -- config({keyword={prev='[', next=']', repeatable=false}, assign={...}, list={...}, paren={...}, str={...} })
+    -- config({class={prev='[', next=']', repeatable=false}, assign={...}, list={...}, paren={...}, str={...} })
     config = function(options)
         config(assign, options.assign, new_assign)
-        config(keyword, options.keyword, new_keyword)
-        config(list, options.list, new_list)
+        config(class, options.class, new_class)
+        config(fn, options.fn, new_fn)
+        config(flow, options.flow, new_flow)
+        config(square, options.list, new_square)
         config(paren, options.paren, new_paren)
         config(str, options.str, new_str)
     end,
