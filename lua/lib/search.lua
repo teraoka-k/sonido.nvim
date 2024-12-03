@@ -13,7 +13,7 @@ local function read_lines(start, goes_down, for_each_line)
 end
 
 local M = {
-    word_list = { '' },
+    word_list = {},
 }
 
 local function is_valid_pos(pos, is_first_line, goes_down)

@@ -17,10 +17,16 @@ local function new(key_prev, key_next, definitions, repeatable, goback)
         next_or_prev(m.to_char_reverse)
     end
     local extensions = u.keys(definitions)
-    unmap.all({ key_prev, key_next }, { 'n' }, u.max(key_next:len(), key_next:len()),
-        u.contains('_', extensions) and { '*' } or extensions)
-    vim.keymap.set('n', key_prev, prev)
-    vim.keymap.set('n', key_next, next)
+    for _, key in ipairs({ key_prev, key_next }) do
+        unmap.escape_all_keys_starting_with(
+            key,
+            '<Leader>',
+            { 'n' },
+            u.contains('_', extensions) and { '*' } or extensions
+        )
+    end
+    vim.keymap.set('n', key_prev, prev, { noremap = true })
+    vim.keymap.set('n', key_next, next, { noremap = true })
     return { next, prev }
 end
 
@@ -43,7 +49,7 @@ local curly = {
 }
 local flow = {
     rs = { "for .* in ", "while ", "loop ", "if ", "else " },
-    lua = { "for .* in ", "repeat ", "if ", "else " },
+    lua = { "for .* in ", "repeat ", "if ", "else" },
     _ = { "for .* [io][nf] ", "while ", "loop ", "if ", "else " },
 }
 local js = { 'function ', '%(?.*%)? => ' }

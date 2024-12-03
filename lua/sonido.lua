@@ -3,7 +3,7 @@ local symbol = require("lib.symbol")
 local unmap = require("lib.unmap")
 
 return {
-    unmap_all = unmap.all,
+    unmap_all = unmap.escape_all_keys_starting_with,
     char_next = move.char_next,
     char_prev = move.char_prev,
     next = move.next,
