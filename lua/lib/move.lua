@@ -32,11 +32,11 @@ function M.char_prev(len)
 end
 
 function M.next()
-    (M.godown and M.to_char or M.to_char_reverse)({ s.word })
+    (M.godown and M.to_char or M.to_char_reverse)()
 end
 
 function M.prev()
-    (M.godown and M.to_char_reverse or M.to_char)({ s.word })
+    (M.godown and M.to_char_reverse or M.to_char)()
 end
 
 function M._to_char(

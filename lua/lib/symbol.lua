@@ -3,17 +3,11 @@ local v = require("lib.vim")
 local m = require("lib.move")
 local unmap = require("lib.unmap")
 
-local function new(key_prev, key_next, definitions, repeatable)
+local function new(key_prev, key_next, definitions, repeatable, goback)
     local function next_or_prev(move)
-        local symbols = u.map(definitions[v.extension()] or definitions['_'], function(symbol)
-            local sub, _ = symbol:gsub("[(]", "%%(")
-            sub, _ = sub:gsub("[)]", "%%)")
-            sub, _ = sub:gsub("%[", "%%[")
-            sub, _ = sub:gsub("%]", "%%]")
-            return sub
-        end)
+        local symbols = definitions[v.extension()] or definitions._
         if symbols then
-            move(symbols, true, repeatable)
+            move(symbols, true, repeatable, goback)
         end
     end
     local function next()
@@ -31,27 +25,31 @@ local function new(key_prev, key_next, definitions, repeatable)
 end
 
 local assign = {
-    _ = { ' = ', '+=', '-=', '/=', '*=', '|=', '&=', '&&=', '||=', ' < ', ' > ', ' <= ', ' >= ' }
+    _ = { '= (.+)', '%+= (.+)', '%-= (.+)', '/= (.+)', '%*= (.+)', '|= (.+)', '&= (.+)', '&&= (.+)', '||= (.+)', ' < (.+)', ' > (.+)', ' <= (.+)', ' >= (.+)' }
 }
 local js_class = { 'class ', 'enum ' }
 local ts_class = u.merge(js_class, { 'interface ', 'type ' })
 local class = {
-    rs = { "struct ", "impl ", "trait " },
+    rs = { "struct (.+)", "impl (.+)", "trait (.+)" },
     js = js_class,
     jsx = js_class,
     ts = ts_class,
-    tsx = ts_class
+    tsx = ts_class,
+    lua = { 'local .* = {' },
+    _ = { 'class ' }
 }
 local curly = {
     _ = { '{' }
 }
 local flow = {
     rs = { "for .* in ", "while ", "loop ", "if ", "else " },
+    lua = { "for .* in ", "repeat ", "if ", "else " },
+    _ = { "for .* [io][nf] ", "while ", "loop ", "if ", "else " },
 }
-local js = { 'function ', '(?.*)? => ' }
+local js = { 'function ', '%(?.*%)? => ' }
 local fn = {
     rs = { "fn ", "|.*| {" },
-    lua = { "function(", "function " },
+    lua = { "function%(", "function " },
     js,
     jsx = js,
     ts = js,
@@ -59,32 +57,35 @@ local fn = {
     py = { "def " }
 }
 local paren = {
-    _ = { '(' }
+    _ = { '%(' }
 }
 local str = {
     _ = { "'.*'", '".*"', '`.*`' }
 }
 local square = {
-    _ = { '[' }
+    _ = { '%[' }
 }
 local tag = {
     _ = { '<' }
 }
+local type = {
+    rs = { ': ([a-zA-Z0-9_<>&*]+)[,%) ]', '-> ([a-zA-Z0-9_<>&*]+)' }
+}
 
 local function new_assign()
-    new('=', '=', assign, true)
+    new('=', '_', assign)
 end
 local function new_class()
     new('H', 'L', class)
 end
 local function new_flow()
-    new('_', '_', flow, true)
+    new('+', '-', flow)
 end
 local function new_curly()
     new('{', '}', curly)
 end
 local function new_fn()
-    new('K', 'J', fn)
+    new('F', 'f', fn)
 end
 local function new_paren()
     new('(', ')', paren)
@@ -98,6 +99,9 @@ end
 local function new_tag()
     new('<', '>', tag)
 end
+local function new_type()
+    new('T', "t", type)
+end
 
 local function config(definition, option, default)
     if option then
@@ -106,7 +110,6 @@ local function config(definition, option, default)
         default()
     end
 end
-
 
 return {
     setup = function()
@@ -119,6 +122,7 @@ return {
         new_square()
         new_str()
         new_tag()
+        new_type()
     end,
     -- config({class={prev='[', next=']', repeatable=false}, assign={...}, list={...}, paren={...}, str={...} })
     config = function(options)
@@ -129,6 +133,8 @@ return {
         config(square, options.list, new_square)
         config(paren, options.paren, new_paren)
         config(str, options.str, new_str)
+        config(tag, options.tag, new_tag)
+        config(type, options.type, new_type)
     end,
     new,
 }
