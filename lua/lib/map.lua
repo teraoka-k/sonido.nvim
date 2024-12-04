@@ -30,25 +30,25 @@ return {
             return original:sub(1, 1) == key and original:len() > key:len()
         end
 
-        local function enable(mode, key, callback)
-            vim.keymap.set(mode, key, callback, { noremap = true })
-            vim.api.nvim_set_keymap(mode, escape_to .. key, key, { noremap = true })
+        local function enable(modes, key, callback)
+            vim.keymap.set(modes, key, callback, { noremap = true })
+            vim.keymap.set(modes, escape_to .. key, key, { noremap = true })
             for _, map in ipairs(vim.fn.maplist()) do
                 local original = map.lhs
-                if starts_with(key, original) and map.mode == mode then
+                if starts_with(key, original) and u.contains(map.mode, modes) then
                     vim.cmd('unmap ' .. (map.buffer == 1 and '<buffer>' or '') .. original)
                     remap(map, escape_to .. key)
                 end
             end
         end
 
-        local function disable(mode, key)
-            vim.keymap.del(mode, key)
-            vim.api.nvim_set_keymap(mode, key, key, { noremap = true })
+        local function disable(modes, key)
+            vim.keymap.del(modes, key)
+            vim.keymap.set(modes, key, key, { noremap = true })
             for _, map in ipairs(vim.fn.maplist()) do
                 local _key = map.lhs
                 local original_key = string.match(_key, u.escape_pattern_symbols(escape_to) .. '(.+)')
-                if original_key and original_key.sub(1, 1) == key and map.mode == mode then
+                if original_key and original_key.sub(1, 1) == key and u.contains(map.mode, modes) then
                     vim.cmd('unmap ' .. (map.buffer == 1 and '<buffer>' or '') .. _key)
                     remap(map, original_key)
                 end
@@ -56,7 +56,7 @@ return {
         end
 
         for _, keymap in ipairs(keymaps) do
-            local mode = keymap[1]
+            local modes = keymap[1]
             local key = keymap[2]
             local callback = keymap[3]
             local pattern = u.map(extensions, function(extension) return '*.' .. extension end)
@@ -64,14 +64,14 @@ return {
                 { "BufEnter", "BufWinEnter" },
                 {
                     pattern = pattern,
-                    callback = function() enable(mode, key, callback) end
+                    callback = function() enable(modes, key, callback) end
                 }
             )
             vim.api.nvim_create_autocmd(
                 { "BufLeave", "BufWinLeave" },
                 {
                     pattern = pattern,
-                    callback = function() disable(mode, key) end
+                    callback = function() disable(modes, key) end
                 }
             )
         end

@@ -33,25 +33,36 @@ local function get_default_feats(lang_name)
     }
 end
 
+local function set_jump(jump, modes)
+    if jump ~= nil and jump or jump == nil then
+        local prev = 'S'
+        local next = 's'
+        local len = 2
+        if jump ~= nil then
+            prev = jump[1]
+            next = jump[2]
+            len = jump[3]
+        end
+        vim.keymap.set(modes, next, function() move.char_next(len) end)
+        vim.keymap.set(modes, prev, function() move.char_prev(len) end)
+    end
+end
+
+local function set_symbol(features, custom_settings, escape_to, modes)
+    if custom_settings then
+        default_settings = util.merge_table(default_settings, custom_settings)
+    end
+    for lang, settings in next, default_settings, nil do
+        symbol.add(settings, features[lang] or get_default_feats(lang), escape_to, modes)
+    end
+end
+
 return {
-    -- { lua = { fn = {'F','f'} } }
-    setup = function(features, custom_settings)
-        -- move to matched chars
-        vim.keymap.set('n', 's', function() move.char_next(2) end)
-        vim.keymap.set('n', 'S', function() move.char_prev(2) end)
-
-        if custom_settings then
-            default_settings = util.merge_table(default_settings, custom_settings)
-        end
-
-        -- move to symbols
-        features = features or {}
-        for lang, settings in next, default_settings, nil do
-            -- print(vim.inspect(lang))
-            -- print(vim.inspect(settings))
-            -- print(vim.inspect(features[lang]))
-            -- print(vim.inspect(get_default_feats(lang)))
-            symbol.add(settings, features[lang] or get_default_feats(lang))
-        end
+    -- { lua = { fn = {'F','f'} }, options = {modes, custom_settings, jump={'S','s', 2}},escape_to='<Leader>' }
+    setup = function(features, options)
+        options = options or {}
+        local modes = options.modes or { 'n', 'v' }
+        set_jump(options.jump, modes)
+        set_symbol(features or {}, options.custom_settings, options.escape_to, modes)
     end
 }

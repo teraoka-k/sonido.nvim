@@ -39,7 +39,7 @@ end
 local M = {
     -- array
     contains = function(char, chars)
-        for i, _char in ipairs(chars) do
+        for _, _char in ipairs(chars) do
             if _char == char then
                 return true
             end
@@ -65,7 +65,7 @@ local M = {
         end
         return arr
     end,
-    merge_all_array = function(arrays)
+    merge_arrays = function(arrays)
         local arr = {}
         for _, array in ipairs(arrays) do
             for _, v in ipairs(array) do
@@ -132,5 +132,4 @@ local M = {
         return _max
     end,
 }
-
 return M

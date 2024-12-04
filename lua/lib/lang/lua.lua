@@ -5,5 +5,6 @@ return {
     { 'lua' },
     util.merge_table(common, {
         fn = { 'function%(', 'function ' },
+        flow = util.merge_arrays({ common.flow, { 'do$', 'repeat$' } })
     })
 }
