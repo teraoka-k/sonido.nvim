@@ -21,13 +21,11 @@ local function find_capture(str, pattern)
         return (start_at + string.find(str:sub(start_at), escape_pattern_symbols(capture)) - 1), end_at, capture
     end
 end
-
-
 local function find_captures(str, pattern)
     local match_list = {}
     local start_at = 1
     while true do
-        local _start_at, end_at, _ = find_capture(str, pattern)
+        local _start_at, end_at, capture = find_capture(str, pattern)
         if end_at == nil then
             break
         end
@@ -67,6 +65,15 @@ local M = {
         end
         return arr
     end,
+    merge_all_array = function(arrays)
+        local arr = {}
+        for _, array in ipairs(arrays) do
+            for _, v in ipairs(array) do
+                table.insert(arr, v)
+            end
+        end
+        return arr
+    end,
     -- table
     keys = function(t)
         local v_list = {}
@@ -81,6 +88,16 @@ local M = {
             table.insert(v_list, v)
         end
         return v_list
+    end,
+    merge_table = function(t1, t2)
+        local new_t = {}
+        for k, v in next, t1, nil do
+            new_t[k] = v
+        end
+        for k, v in next, t2, nil do
+            new_t[k] = v
+        end
+        return new_t
     end,
     -- string
     endswith = function(str, ending)
@@ -97,6 +114,7 @@ local M = {
             return match_list[#match_list]
         end
     end,
+    escape_pattern_symbols = escape_pattern_symbols,
     -- number
     min = function(a, b)
         if a < b then
