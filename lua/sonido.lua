@@ -5,36 +5,8 @@ local md = require("lib.lang.md")
 local rs = require("lib.lang.rs")
 local lua = require("lib.lang.lua")
 
-local default_settings = { lua = lua, md = md, rs = rs }
-
-local function get_default_feats(lang_name)
-    if lang_name == 'md' then
-        return {
-            code = { '~', '`' },
-            font = { '"', "'" },
-            h = { 'H', 'L' },
-            h_all = { 'F', 'f' },
-            link = { '[', ']' },
-            list = { '+', '-' },
-            quote = { '<', '>' },
-        }
-    end
-    return {
-        assign = { '=', '_' },
-        class = { 'H', 'L' },
-        curly = { '{', '}' },
-        flow = { '+', '-' },
-        fn = { 'F', 'f' },
-        paren = { '(', ')' },
-        square = { '[', ']' },
-        str = { '"', "'" },
-        tag = { '<', '>' },
-        type = { 'T', 't' },
-    }
-end
-
 local function set_jump(jump, modes)
-    if jump ~= nil and jump or jump == nil then
+    if jump ~= nil and jump then
         local prev = 'S'
         local next = 's'
         local len = 2
@@ -48,21 +20,83 @@ local function set_jump(jump, modes)
     end
 end
 
-local function set_symbol(features, custom_settings, escape_to, modes)
-    if custom_settings then
-        default_settings = util.merge_table(default_settings, custom_settings)
-    end
-    for lang, settings in next, default_settings, nil do
-        symbol.add(settings, features[lang] or get_default_feats(lang), escape_to, modes)
+local function set_langs(options)
+    for _, lang in ipairs(options.langs) do
+        local symbols = options.symbols[lang]
+        if symbols then
+            symbol.add(lang, symbols, options.keymaps, options.escape_prefix, options.modes)
+        end
     end
 end
 
 return {
-    -- { lua = { fn = {'F','f'} }, options = {modes, custom_settings, jump={'S','s', 2}},escape_to='<Leader>' }
-    setup = function(features, options)
+    --{
+    --    modes = { 'n', 'v', 'o' },
+    --    langs = { 'lua', 'md', 'rs' },
+    --    feats = { 'assign', 'class', 'curly', 'flow', 'fn', 'paren', 'square', 'str', 'angle', 'type' },
+    --    keymaps = {
+    --        angle = { '<', '>' },
+    --        assign = { '=', '_' },
+    --        class = { 'H', 'L' },
+    --        curly = { '{', '}' },
+    --        flow = { '+', '-' },
+    --        fn = { 'F', 'f' },
+    --        paren = { '(', ')' },
+    --        square = { '[', ']' },
+    --        str = { '"', "'" },
+    --        type = { 'T', 't' },
+    --    },
+    --    symbols = { lua = { assign = { 'local (.-) = ' } } },
+    --    escape_prefix = '<Leader>',
+    --    jump = { 'S', 's', 2 },
+    --}
+    setup = function(options)
         options = options or {}
-        local modes = options.modes or { 'n', 'v' }
-        set_jump(options.jump, modes)
-        set_symbol(features or {}, options.custom_settings, options.escape_to, modes)
+        options.modes = options.modes or { 'n', 'v', 'o' }
+        options.langs = options.langs or { 'lua', 'md', 'rs' }
+        options.keymaps = util.merge_table({
+            angle = { '<', '>' },
+            assign = { '=', '_' },
+            class = { 'H', 'L' },
+            curly = { '<Leader>C', '<Leader>c' },
+            flow = { '+', '-' },
+            fn = { 'F', 'f' },
+            paren = { '(', ')' },
+            ret = { '|', '\\' },
+            square = { '[', ']' },
+            -- str = { '<Leader>"', "<Leader>'" },
+            type = { 'T', 't' },
+        }, options.keymaps or {})
+        options.escape_prefix = options.escape_prefix or '<Leader>'
+        -- filter out keymaps by features
+        if options.feats then
+            local keymaps = {}
+            for feat, keymap in next, options.keymaps do
+                if util.contains(feat, options.feats) then
+                    keymaps[feat] = keymap
+                end
+            end
+            options.keymaps = keymaps
+        end
+
+        -- add or override symbols
+        local symbols = { lua = lua, md = md, rs = rs }
+        if options.symbols then
+            for lang, new_symbols in next, options.symbols do
+                if symbols[lang] then
+                    for feat, new_symbol in next, new_symbols do
+                        symbols[lang][feat] = new_symbol
+                    end
+                else
+                    symbols[lang] = new_symbols
+                end
+            end
+            options.symbols = symbols
+        else
+            options.symbols = symbols
+        end
+
+        set_jump(options.jump, options.modes)
+        set_langs(options)
     end
 }

@@ -24,7 +24,7 @@ end
 
 local function delete_keymap(map)
     if map.lhs == '[[' or map.lhs == ']]' then
-        vim.cmd('unmap ' .. (map.buffer and '<buffer> ' or '') .. map.lhs)
+        vim.cmd(map.mode .. 'unmap ' .. (map.buffer and '<buffer> ' or '') .. map.lhs)
     else
         vim.keymap.del(map.mode, map.lhs, get_map_options(map))
     end
@@ -53,43 +53,43 @@ local function remap_all_conflicts(modes, key, get_original_key, get_new_key)
     end
 end
 
-local function escape_original_map(modes, key, escape_to)
-    vim.keymap.set(modes, escape_to .. key, key, { noremap = true })
+local function escape_original_map(modes, key, escape_prefix)
+    vim.keymap.set(modes, escape_prefix .. key, key, { noremap = true })
 end
 local function restore_original_map(modes, key)
     vim.keymap.del(modes, key)
     vim.keymap.set(modes, key, key, { noremap = true })
 end
 
-local function create_autocmd(events, pattern, toggle, keymaps, escape_to)
+local function create_autocmd(events, pattern, toggle, keymaps, escape_prefix)
     vim.api.nvim_create_autocmd(
         events,
         {
             pattern = pattern,
             callback = function()
                 foreach_keymap(keymaps, function(modes, key, command)
-                    toggle(modes, key, escape_to, command)
+                    toggle(modes, key, escape_prefix, command)
                 end)
             end
         }
     )
 end
-local function enable_keymaps(modes, key, escape_to, command)
-    escape_original_map(modes, key, escape_to)
+local function enable_keymaps(modes, key, escape_prefix, command)
+    escape_original_map(modes, key, escape_prefix)
     vim.keymap.set(modes, key, command, { noremap = true })
     remap_all_conflicts(
         modes,
         key,
         nil,
-        function(original_key) return escape_to .. original_key end
+        function(original_key) return escape_prefix .. original_key end
     )
 end
-local function disable_keymaps(modes, key, escape_to)
+local function disable_keymaps(modes, key, escape_prefix)
     restore_original_map(modes, key)
     remap_all_conflicts(
         modes,
         key,
-        function(lhs) return string.match(lhs, '^' .. u.escape_pattern_symbols(escape_to) .. '(.+)') end,
+        function(lhs) return string.match(lhs, '^' .. u.escape_pattern_symbols(escape_prefix) .. '(.+)') end,
         nil
     )
 end
@@ -97,10 +97,10 @@ end
 return {
     -- for specified file extension, set keymaps and unmap all keys starting with newly created keymaps
     -- the keymaps are dynamically enabled/disabled when entering/leaving buffers of the specified extension
-    set_and_escape = function(keymaps, escape_to, extensions)
-        escape_to = escape_to or '<Leader>'
+    set_and_escape = function(keymaps, escape_prefix, extensions)
+        escape_prefix = escape_prefix
         local file_name_pattern = u.map(extensions, function(extension) return '*.' .. extension end)
-        create_autocmd({ "BufEnter", "BufWinEnter" }, file_name_pattern, enable_keymaps, keymaps, escape_to)
-        create_autocmd({ "BufLeave", "BufWinLeave" }, file_name_pattern, disable_keymaps, keymaps, escape_to)
+        create_autocmd({ "BufEnter", "BufWinEnter" }, file_name_pattern, enable_keymaps, keymaps, escape_prefix)
+        create_autocmd({ "BufLeave", "BufWinLeave" }, file_name_pattern, disable_keymaps, keymaps, escape_prefix)
     end
 }

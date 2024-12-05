@@ -21,7 +21,7 @@
 --   paren : ()
 --   square: []
 --   str   : '' "" ``
---   tag   : <>
+--   angle   : <>
 --   type  : type annotations (for static lanuages). as type definitions are top-level structure, define them in the class sections
 --   or_any_keyword_that_you_find_more_helpful: ...
 
@@ -34,5 +34,5 @@ return {
     square = { '%[' },
     -- `.-` is like `.*` but non-greedy
     str = { "'.-'", '".-"', '`.-`' },
-    tag = { '<' },
+    angle = { '<' },
 }
