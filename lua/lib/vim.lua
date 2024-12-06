@@ -9,6 +9,7 @@ return {
     getpos,
     line = vim.fn.line,
     setcursorcharpos = vim.fn.setcursorcharpos,
+    search = vim.fn.search,
     extension = function()
         return vim.fn.expand('%'):match("^.+%.(.+)$")
     end,
@@ -27,6 +28,8 @@ return {
             return chars
         end
     end,
-    get_visible_first_line = function() return getpos('w0')[2] end,
-    get_visible_last_line = function() return getpos('w$')[2] end,
+    get_line_column = function()
+        local pos = getpos('.')
+        return pos[2], pos[3]
+    end,
 }

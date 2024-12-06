@@ -13,7 +13,19 @@ local function escape_pattern_symbols(str)
     return escape
 end
 local function find_capture(str, pattern)
-    local start_at, end_at, capture = string.find(str, pattern)
+    local captures = { string.find(str, pattern) }
+    local start_at
+    local end_at
+    local capture
+    for i, _capture in ipairs(captures) do
+        if i == 1 then
+            start_at = _capture
+        elseif i == 2 then
+            end_at = _capture
+        else
+            capture = _capture
+        end
+    end
     if not capture then
         return start_at, end_at, capture
     end
@@ -46,7 +58,6 @@ local M = {
         end
         return false
     end,
-
     map = function(array, fn)
         local new_map = {}
         if not array then return new_map end
@@ -100,6 +111,18 @@ local M = {
         return new_t
     end,
     -- string
+    split = function(str, delimiter)
+        local result               = {}
+        local from                 = 1
+        local delim_from, delim_to = string.find(str, delimiter, from)
+        while delim_from do
+            table.insert(result, string.sub(str, from, delim_from - 1))
+            from                 = delim_to + 1
+            delim_from, delim_to = string.find(str, delimiter, from)
+        end
+        table.insert(result, string.sub(str, from))
+        return result
+    end,
     endswith = function(str, ending)
         return str:sub(- #ending) == ending
     end,
@@ -132,4 +155,5 @@ local M = {
         return _max
     end,
 }
+
 return M

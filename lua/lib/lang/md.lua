@@ -1,12 +1,13 @@
 local c = require("lib.lang.common")
--- local horizontal = { '^%s[*-]$', '^%s?%-%-%-$', '^__+$' }
-local quote_or_url = { '^> ', '<https?://.+%..+>', '<.+%@%.+>' }
-local code = { '[ *]`(.-)`$?', '```' }
-local link_or_image = { '%!?%[.*%]%(.-%)' }
-local list = { '^%s?[-*] ', '^%s?1%. ' }
-local header1or2 = { '^##? (.+)' }
-local header_all = { '^#+ (.+)' }
-local font = { ' [*_~][*_~][*_~]?(.-)[*_~][*_~][*_~]?', '<ins>(.+)<ins>' }
+
+-- local horizontal = [[^\s[*-]$|^\s?---$|^__*$]]
+local quote_or_url = [[^\> |\<https?://?.{-}\>|\<.{-}\@\..{-}\>]] .. c.next_word
+local code = [[`.{-}`]]
+local link_or_image = [[!?\[.{-}\]\(.{-}\)]] .. c.next_word
+local list = [[^\s?([-*]|1\.) ]] .. c.skip_whitespace
+local header1or2 = [[^##? .*]] .. c.skip_whitespace
+local header_all = [[^#+ .*]] .. c.skip_whitespace
+local font = [[([*_~]{1,3}).{-}\1($|\s)|\<ins\>.{-}\<\/ins\>/;/\w]]
 
 return {
     angle = quote_or_url,

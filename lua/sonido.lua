@@ -24,7 +24,7 @@ local function set_langs(options)
     for _, lang in ipairs(options.langs) do
         local symbols = options.symbols[lang]
         if symbols then
-            symbol.add(lang, symbols, options.keymaps, options.escape_prefix, options.modes)
+            symbol.add(lang, symbols, options.keymaps, options.escape_prefix, options.modes, options.is_repeatable)
         end
     end
 end
@@ -48,11 +48,12 @@ return {
     --    },
     --    symbols = { lua = { assign = { 'local (.-) = ' } } },
     --    escape_prefix = '<Leader>',
+    --    is_repeatable = true,
     --    jump = { 'S', 's', 2 },
     --}
     setup = function(options)
         options = options or {}
-        options.modes = options.modes or { 'n', 'v', 'o' }
+        options.modes = options.modes or { 'n', 'v' }
         options.langs = options.langs or { 'lua', 'md', 'rs' }
         options.keymaps = util.merge_table({
             angle = { '<', '>' },
@@ -67,6 +68,7 @@ return {
             -- str = { '<Leader>"', "<Leader>'" },
             type = { 'T', 't' },
         }, options.keymaps or {})
+        options.is_repeatable = options.is_repeatable == nil and true or options.is_repeatable
         options.escape_prefix = options.escape_prefix or '<Leader>'
         -- filter out keymaps by features
         if options.feats then
@@ -78,6 +80,9 @@ return {
             end
             options.keymaps = keymaps
         end
+        vim.api.nvim_create_user_command('Sonido', function()
+            print(vim.inspect(options.keymaps))
+        end, {})
 
         -- add or override symbols
         local symbols = { lua = lua, md = md, rs = rs }

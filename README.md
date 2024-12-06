@@ -2,24 +2,34 @@
 
 ## Abstract
 
-Sonído.nvim is **a high-speed movement technique** realized by **language-specific optimization** with **language-agnostic keymaps**
-
-- **move to symbols with one-stroke**
-  - functions, classes, interfaces, control-flows, strings, type-annotations, and ANY USER-DEFINED SYMBOL
-  - repeat every movement by , ;
-  - remap ANY Vim's default keybindings like `()[]`, gracefully 
+Define regex once, use it anywhere to navigate through code
 
 ## Motivation
-Some movements are so generic as not to be helpful (e.g. `(` moves the cursor n-sentences backwards). Vim assigns handy labels to positions (e.g. `^` `$` `H` `L` `M` `G` etc). Let's add more language-specific labels for coding with ease. 
+When writing a program, you always repeat the same workflow
+
+1. skim through top-level structures like class
+2. go into the class to skim through functions
+3. go into the function to skim through control flows like if, else, while, or for
+4. go into the control flow to edit
+  - function calls
+  - variable assignments and comparisons
+  - literals like string, index, key
+  - type annotations
+5. go back to 1, 2, or 3
+
+So, shortcuts to navigate to 1,2,3, and 4 are handy
+
+If you haven't setup such keymaps by yourself yet, Sonído is here for you to do that
+
 
 ## Showcase
 <TODO:> add a video here
 
+- `H` or `L` move to previous or next `class` or `struct` or `impl`
 - `F` or `f` move to previous or next `function`
 - `T` or `t` move to previous or next type annotation
-- `H` or `L` move to previous or next `class` or `struct` or `impl`
 - `+` or `-` move to previous or next `if` `else` `while` `for`
-- `_` or `\` move to previous or next `return` `end` 
+- `_` or `\` move to previous or next `return`
 - `=` or `_` move to previous or next assignment
 - `=` or `_` move to previous or next `'string', "string"`
 - `[` or `]` move to previous or next `[`
@@ -27,9 +37,9 @@ Some movements are so generic as not to be helpful (e.g. `(` moves the cursor n-
 - `<Leader>{` or `<Leader>}` move to previous or next `{`
 - `<Leader>"` or `<Leader>'` move to previous or next strings `"" ''`
 
-**use any keymap omimal for your keyboard**
+**they are just an example. customize regex and keymaps for your liking**
 
-> **ANY Vim's DEFAULT KEY CAN BE REMAPPED AND STILL ACCESSIBLE!** (e.g. type `f` to move to functions and type `<Leader>f` to find a character in the line.) **Sonído adds extra value to Neovim without losing its goodeness**
+> **Vim's DEFAULT COMMANDS ARE STILL ACCESSIBLE!** (e.g. type `f` to move to functions and type `<Leader>f` to find a character in the line)
 
 ## Install
 
@@ -62,10 +72,15 @@ And if you want to add a support for a new language, read **Add A New Language**
             flow = { '+', '-' },
             fn = { 'F', 'f' },
             paren = { '(', ')' },
+            pri = {'<Leader>Fp','<Leader>fp'},
+            pub = {'<Leader>FP','<Leader>fP'},
             ret = { '|', '\\' },
             square = { '[', ']' },
             str = { '<Leader>"', "<Leader>'" },
             type = { 'T', 't' },
+
+            -- and user-defined features 
+            -- custom_feature1 = { '', ''},
       },
     }) end
 }
@@ -75,6 +90,8 @@ e.g. `fn = {'F', 'f'}` means type `F` to move to previous function, and `f` to n
 
 #### Definitions
 
+default features' definitions
+
 ##### for programming languages
 - angle : left angle bracket `<`
 - assign: `let foo = 1` `foo = 2` `foo += 1` etc
@@ -83,6 +100,8 @@ e.g. `fn = {'F', 'f'}` means type `F` to move to previous function, and `f` to n
 - flow  : control flows `if` `else` `while` `for i in array` etc
 - fn    : functions and closures
 - paren : `(`
+- pri   : private
+- pub   : public
 - ret   : `return` (`end` for lua)
 - square: `[`
 - str   : `"foo"` `'foo'`
@@ -97,10 +116,8 @@ e.g. `fn = {'F', 'f'}` means type `F` to move to previous function, and `f` to n
 - flow  : top-level list `-` `*` `1.` 
 - fn    : # ## ### ####... all headers
 - paren : `(`
-- ret   : Not used
 - square: [link](https://) or ![image](none)
 - str   : `inline-code` or code block 
-- type  : Not used 
 
 ### Features
 
@@ -119,10 +136,14 @@ all features are active by default
         'flow',
         'fn',
         'paren',
+        'pri',
+        'pub',
         'ret',
         'square',
         'str',
-        'type'
+        'type',
+        -- and any custom features
+        -- 'custom_feature_1'
       },
     }) end
 }
@@ -135,25 +156,39 @@ select file-extensions to activate Sonído
 ```.lua
 {
     config = function() require("sonido").setup({
-			langs = { 'lua', 'md', 'rs' },
+			langs = {
+                'lua', 'md', 'rs',
+                -- and any user_defined file types
+                -- 'js',
+            },
     }) end
 }
 ```
 
-**If you add a new language, you must append the file-extension here**
+**To use languages other than 'lua', 'md', 'rs', you must define regex**
 
 See the **Add A New Language** section for detail 
 
+### Repeat
+
+all the movement is repeatalbe by default
+
+```
+{
+    config = function() require("sonido").setup({
+      is_repeatable = true
+    }) end
+}
+```
+
 ### Modes
 
-normal, visual, operator-pending modes are active by default 
-
-> operator-pending: When an operator is pending (after "d", "y", "c", etc.). by [Neovim.io/doc](https://neovim.io/doc/user/map.html#mapmode-o)
+normal and visual modes are active by default 
 
 ```.lua
 {
     config = function() require("sonido").setup({
-			modes = { 'n', 'v', 'o' },
+			modes = { 'n', 'v' },
     }) end
 }
 ```
@@ -162,10 +197,12 @@ normal, visual, operator-pending modes are active by default
 
 Vim's default keys including `[` `]` cannot be overridden easily, as many keys starting with those keys dynamically turned on/off every time buffers are opened/closed. This plugin allows users to override these keys, and the original commands of these keys are accessible by typing with a prefix (e.g.)`<EscapePrefix>[` `<EscapePrefix>]`.
 
+default is `<Leader>`
+
 ```.lua
 {
     config = function() require("sonido").setup({
-        escape_prefix = '<Space>', 
+        escape_prefix = '<Leader>', 
     }) end
 }
 ```
@@ -175,7 +212,7 @@ a feature like minimal [easy-motion](https://github.com/easymotion/vim-easymotio
 
 instead of displaying labels, immediately move to the closest matched words after typing n chars, then type `,` or `;` to adjust the position
 
-**disabled by default** as I think other people use other plugins for this feature. by the way all the features are children of this tiny feature.
+**disabled by default**
 ```
 {
     config = function() require("sonido").setup({
@@ -193,7 +230,10 @@ instead of displaying labels, immediately move to the closest matched words afte
 
 ### Add A New Language
 
-jsut add regex patterns as follows
+add regular expressions as follows
+
+all the patterns are `very magic`. any pattern that works as `/\v pattern` should work for Sonído too.
+run `:h pattern` and search `very magic` for detail 
 
 ```.lua
 {
@@ -214,23 +254,26 @@ jsut add regex patterns as follows
 
       -- a file extension
           js = {
-            angle     = { '<' },
-            assign  = { '= (.+)'},
-            class   = { 'class (.-)'},
-            curly   = { '{' },
-            flow    = {
-              "for %(.-in.-%)","for %(.-of.-%) ",
-              "while ", "if ", "else "
-            },
+            angle = [[\<]],
+            assign = [[\S+\s?[+-\*&|<>=]?(&&|||)?\=\s?\S]],
 
-            -- `.-` is like `.*` but non-greedy
-            fn      = { "function (.+)", "(.-) => " },
+            -- class = 'class ', -- move to `c`
+            class = 'class /;/ /;/\S', -- move to `F` for `class Foo`
 
-            paren   = { '%(' },
-            square  = { '%[' },
-            str     = { "'.-'", '".-"', '`.-`' },
+            curly = [[\{]],
+            flow = [[(for .* (in|of)|while|if|else) ]],
 
-            user_defined_custom_symbol = {'private '},
+            -- fn= "function .{-}|(.{-}) => ", -- move to `f`
+            fn= "function .{-}|(.{-}) => /;/ /;/\S", -- move to `b` for `function bar(...)`
+
+            paren = [[\(]],
+            pri = [[private /;/ /;/\S]],
+            pub = [[public /;/ /;/\S]],
+            ret = [[return.*$]],
+            square = '\\[',
+            str = [[(['"`]).{-}\1]]
+
+            user_defined_custom_symbol = 'private ',
           }
 
       -- a file extension
@@ -242,31 +285,13 @@ jsut add regex patterns as follows
 }
 ```
 
-Folllow the two rules below
+as in Vim's default search, use `foo/;/bar` to move to `bar` preceeded by `foo`
 
-#### 1 Search by Regex, Move to Capture
-use `^` `$` `!` `.` `?` `+` `-` `*` `[` `]` `(` `)` `%` as lua's regular expressions
+#### File Mangement
 
-##### Exmaple
-suppose there's a line `let foo = "hello Sonido";`
+it's better to put the symbols to separate files as they grow up easily as time goes on
 
-- use `'^let .- = .+$'` to move to `l`
-- use `'^let (.-) = .+$'` to move to `foo`
-
-> here `.-` is like `.*` but non-greedy
-
-#### 2 Escape
-escape `^` `$` `!` `.` `?` `+` `-` `*` `[` `]` `(` `)` `%` by `%`
-
-##### Example
-use `'%('` to move to `(`
-
-
-#### Side Note
-
-it's better to put the symbols into a separate file as they grow up easily as time goes on
-
-##### js.lua
+##### ~/.config/nvim/sonido-lang/js.lua
 ```lua
 return {
   angle = {},
@@ -279,24 +304,21 @@ and import it to init.lua so that it's easy to adjust settings reagardless of nu
 
 ##### init.lua
 ```lua
-{
-    config = function() require("sonido").setup({
-        langs = { 'js' },
-        keymaps = { 
-          user_defined_custom_symbol = {
-            '<Leader>P', '<Leader>p'
-          },          
-        },
-        symbols = {
-          js = require("<path-to->/js.lua"),
-          cpp = require("<path-to->/cpp.lua"),
-        }
+    config = function()
+        local js = require('sonido-lang.js')
+
+        require("sonido").setup({
+            langs = { 'js', 'jsx', 'cpp' },
+            keymaps = { 
+              user_defined_custom_symbol = {
+                '<Leader>P', '<Leader>p'
+              },          
+            },
+            symbols = {
+              js = js,
+              jsx = js,
+              cpp = require("<path-to->/cpp.lua"),
+            }
+        })
+    end
 ```
-
-**here any help is valuable. It only starts with 3 languages rs, lua, md. I appriciate if you try anoother language and so generous to open a PR to this repostiory** 
-
-<TODO:> write how to open a PR for this repo
-
-## Limitation
-- Non-English letters are not supported as lua's `string.find` function does not work for other languages
-  - hence, if a line include words like `Sonído` and `響転 (ソニード)` the cursor cannot be moved correctly
