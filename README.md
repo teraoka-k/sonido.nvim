@@ -23,21 +23,10 @@ If you haven't setup such keymaps by yourself yet, Sonído is here for you to do
 
 
 ## Showcase
-<TODO:> add a video here
 
-- `H` or `L` move to previous or next `class` or `struct` or `impl`
-- `F` or `f` move to previous or next `function`
-- `T` or `t` move to previous or next type annotation
-- `+` or `-` move to previous or next `if` `else` `while` `for`
-- `_` or `\` move to previous or next `return`
-- `=` or `_` move to previous or next assignment
-- `=` or `_` move to previous or next `'string', "string"`
-- `[` or `]` move to previous or next `[`
-- `(` or `)` move to previous or next `(`
-- `<Leader>{` or `<Leader>}` move to previous or next `{`
-- `<Leader>"` or `<Leader>'` move to previous or next strings `"" ''`
+https://github.com/user-attachments/assets/329e47dd-08c5-49b6-8c44-c40bc6647048
 
-**they are just an example. customize regex and keymaps for your liking**
+**they are just an example. define regex as your liking**
 
 > **Vim's DEFAULT COMMANDS ARE STILL ACCESSIBLE!** (e.g. type `f` to move to functions and type `<Leader>f` to find a character in the line)
 
@@ -47,23 +36,11 @@ If you haven't setup such keymaps by yourself yet, Sonído is here for you to do
 ```.lua
 {
     "teraoka-k/sonido.nvim",
-    config = function() require("sonido").setup() end
-}
-```
-
-## Config
-
-all of the following settings are optional
-
-I recommend to set keymaps
-
-And if you want to add a support for a new language, read **Add A New Language** section too.
-
-### Keymaps
-
-```.lua
-{
     config = function() require("sonido").setup({
+      langs = {
+        'lua','md','rs',
+        -- read `Add A New Language` section for other languages and define regex
+      },
       keymaps = {
             angle = { '<', '>' },
             assign = { '=', '_' },
@@ -78,9 +55,6 @@ And if you want to add a support for a new language, read **Add A New Language**
             square = { '[', ']' },
             str = { '<Leader>"', "<Leader>'" },
             type = { 'T', 't' },
-
-            -- and user-defined features 
-            -- custom_feature1 = { '', ''},
       },
     }) end
 }
@@ -118,6 +92,12 @@ default features' definitions
 - paren : `(`
 - square: [link](https://) or ![image](none)
 - str   : `inline-code` or code block 
+
+## Config
+
+all of the settings below are optional
+
+if you want to add a support for a new language, read **Add A New Language** section too.
 
 ### Features
 
@@ -317,7 +297,7 @@ and import it to init.lua so that it's easy to adjust settings reagardless of nu
             symbols = {
               js = js,
               jsx = js,
-              cpp = require("<path-to->/cpp.lua"),
+              cpp = require("sonido-lang.cpp"),
             }
         })
     end

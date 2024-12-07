@@ -52,22 +52,11 @@ return {
     --    jump = { 'S', 's', 2 },
     --}
     setup = function(options)
-        options = options or {}
+        if not options.keymaps then
+            error("set keymaps to use sonido.nvim")
+        end
         options.modes = options.modes or { 'n', 'v' }
         options.langs = options.langs or { 'lua', 'md', 'rs' }
-        options.keymaps = util.merge_table({
-            angle = { '<', '>' },
-            assign = { '=', '_' },
-            class = { 'H', 'L' },
-            curly = { '<Leader>C', '<Leader>c' },
-            flow = { '+', '-' },
-            fn = { 'F', 'f' },
-            paren = { '(', ')' },
-            ret = { '|', '\\' },
-            square = { '[', ']' },
-            -- str = { '<Leader>"', "<Leader>'" },
-            type = { 'T', 't' },
-        }, options.keymaps or {})
         options.is_repeatable = options.is_repeatable == nil and true or options.is_repeatable
         options.escape_prefix = options.escape_prefix or '<Leader>'
         -- filter out keymaps by features
