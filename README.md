@@ -42,18 +42,18 @@ https://github.com/user-attachments/assets/329e47dd-08c5-49b6-8c44-c40bc6647048
         -- read `Add A New Language` section for other languages and define regex
       },
       keymaps = {
-            angle = { '<', '>' },
-            assign = { '=', '_' },
+            angle_l = { '<', '>' },
+            assign_l = { '=', '_' },
             class = { 'H', 'L' },
-            curly = { '<Leader>C', '<Leader>c' },
+            curly_l = { '<Leader>C', '<Leader>c' },
             flow = { '+', '-' },
             fn = { 'F', 'f' },
-            paren = { '(', ')' },
+            paren_l = { '(', ')' },
             pri = {'<Leader>Fp','<Leader>fp'},
             pub = {'<Leader>FP','<Leader>fP'},
             ret = { '|', '\\' },
-            square = { '[', ']' },
-            str = { '<Leader>"', "<Leader>'" },
+            square_l = { '[', ']' },
+            str_l = { '<Leader>"', "<Leader>'" },
             type = { 'T', 't' },
       },
     }) end
@@ -67,31 +67,36 @@ e.g. `fn = {'F', 'f'}` means type `F` to move to previous function, and `f` to n
 default features' definitions
 
 ##### for programming languages
-- angle : left angle bracket `<`
+- angle_l : left angle bracket `<`
+- angle_r : left angle bracket `>`
 - assign: `let foo = 1` `foo = 2` `foo += 1` etc
 - class : `class Foo` `Struct Foo` `impl Foo` etc
-- curly : `{` 
+- curly_l : `{` 
+- curly_r : `}` 
 - flow  : control flows `if` `else` `while` `for i in array` etc
 - fn    : functions and closures
-- paren : `(`
+- paren_l : `(`
+- paren_r : `)`
 - pri   : private
 - pub   : public
 - ret   : `return` (`end` for lua)
-- square: `[`
-- str   : `"foo"` `'foo'`
-- tye   : type annotations
+- square_l: `[`
+- square_r: `]`
+- str_l   : f for `"foo"` `'foo'`
+- str_r   : o for `"foo"` `'foo'`
+- type   : type annotations
 
 ##### for markdown 
-- angle : 
+- angle_l : 
 > quote or <https://url>
-- assign: font (**bold** *italic* <ins>underscore</ins>)
-- class : # Header1 or ## Header2
-- curly : `{` 
-- flow  : top-level list `-` `*` `1.` 
-- fn    : # ## ### ####... all headers
-- paren : `(`
-- square: [link](https://) or ![image](none)
-- str   : `inline-code` or code block 
+- assign  : font (**bold** *italic* <ins>underscore</ins>)
+- class   : # Header1 or ## Header2
+- curly_l : `{` 
+- flow    : top-level list `-` `*` `1.` 
+- fn      : # ## ### ####... all headers
+- paren_l : `(`
+- square_l: [link](https://) or ![image](none)
+- str_l   : `inline-code` or code block 
 
 ## Config
 
@@ -109,18 +114,23 @@ all features are active by default
 {
     config = function() require("sonido").setup({
       feats = {
-        'angle',
+        'angle_l',
+        'angle_r',
         'assign',
         'class',
-        'curly',
+        'curly_l',
+        'curly_r',
         'flow',
         'fn',
-        'paren',
+        'paren_l',
+        'paren_r',
         'pri',
         'pub',
         'ret',
-        'square',
-        'str',
+        'square_l',
+        'square_r',
+        'str_l',
+        'str_r',
         'type',
         -- and any custom features
         -- 'custom_feature_1'
@@ -168,7 +178,7 @@ normal and visual modes are active by default
 ```.lua
 {
     config = function() require("sonido").setup({
-			modes = { 'n', 'v' },
+			modes = { 'n', 'v', 'i', 'o' },
     }) end
 }
 ```
@@ -234,24 +244,24 @@ run `:h pattern` and search `very magic` for detail
 
       -- a file extension
           js = {
-            angle = [[\<]],
+            angle_l = [[\<]],
             assign = [[\S+\s?[+-\*&|<>=]?(&&|||)?\=\s?\S]],
 
             -- class = 'class ', -- move to `c`
             class = 'class /;/ /;/\S', -- move to `F` for `class Foo`
 
-            curly = [[\{]],
+            curly_l = [[\{]],
             flow = [[(for .* (in|of)|while|if|else) ]],
 
             -- fn= "function .{-}|(.{-}) => ", -- move to `f`
             fn= "function .{-}|(.{-}) => /;/ /;/\S", -- move to `b` for `function bar(...)`
 
-            paren = [[\(]],
+            paren_l = [[\(]],
             pri = [[private /;/ /;/\S]],
             pub = [[public /;/ /;/\S]],
             ret = [[return.*$]],
-            square = '\\[',
-            str = [[(['"`]).{-}\1]]
+            square_l = '\\[',
+            str_l = [[(['"`]).{-}\1]]
 
             user_defined_custom_symbol = 'private ',
           }
@@ -274,8 +284,8 @@ it's better to put the symbols to separate files as they grow up easily as time 
 ##### ~/.config/nvim/sonido-lang/js.lua
 ```lua
 return {
-  angle = {},
-  assign = {},
+  angle_l = {},
+  assign_r = {},
   ...
 }
 ```

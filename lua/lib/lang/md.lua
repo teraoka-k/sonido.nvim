@@ -10,13 +10,13 @@ local header_all = [[^#+ .*]] .. c.skip_whitespace
 local font = [[([*_~]{1,3}).{-}\1($|\s)|\<ins\>.{-}\<\/ins\>/;/\w]]
 
 return {
-    angle = quote_or_url,
+    angle_l = quote_or_url,
     assign = font,
     class = header1or2,
-    curly = c.curly,
+    curly_l = c.curly_l,
     fn = header_all,
     flow = list,
-    paren = c.paren,
-    square = link_or_image,
-    str = code,
+    paren_l = c.paren_l,
+    square_l = link_or_image,
+    str_l = code,
 }
