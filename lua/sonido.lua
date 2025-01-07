@@ -3,6 +3,7 @@ local util = require('lib.util')
 local symbol = require("lib.symbol")
 local md = require("lib.lang.md")
 local rs = require("lib.lang.rs")
+local js = require("lib.lang.js")
 local lua = require("lib.lang.lua")
 
 local function set_jump(jump, modes)
@@ -56,7 +57,7 @@ return {
             error("set keymaps to use sonido.nvim")
         end
         options.modes = options.modes or { 'n', 'v' }
-        options.langs = options.langs or { 'lua', 'md', 'rs' }
+        options.langs = options.langs or { 'js', 'jsx', 'lua', 'md', 'rs', 'ts', 'tsx' }
         options.is_repeatable = options.is_repeatable == nil and true or options.is_repeatable
         options.escape_prefix = options.escape_prefix or '<Leader>'
         -- filter out keymaps by features
@@ -74,7 +75,7 @@ return {
         end, {})
 
         -- add or override symbols
-        local symbols = { lua = lua, md = md, rs = rs }
+        local symbols = { js = js, jsx = js, lua = lua, md = md, rs = rs, ts = js, tsx = js }
         if options.symbols then
             for lang, new_symbols in next, options.symbols do
                 if symbols[lang] then

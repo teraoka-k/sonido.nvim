@@ -2,8 +2,8 @@ local next_word = [[/;/\S]]
 
 return {
     angle_l = [[\<]] .. next_word,
-    angle_r = [[\>]],
-    assign = [[\S+\s?[+-\*&|<>=]?(&&|||)?\=\s?.*$]] .. '/;/\\=' .. next_word,
+    angle_r = [[(\=)@<!\>]],
+    assign = [[\S+\s?[+-\*&|<>=]?(&&|||)?\=(\>)@!\s?.*$]] .. '/;/\\=' .. next_word,
     class = 'class ' .. next_word,
     curly_l = [[\{]] .. next_word,
     curly_r = [[\}]],

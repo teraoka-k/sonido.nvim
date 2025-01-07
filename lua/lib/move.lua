@@ -49,7 +49,7 @@ function M.to_char(word, updates_direction, repeatable)
     )
 end
 
-function M.to_char_reverse(word, updates_direction, repeatable, go_back_on_fail)
+function M.to_char_reverse(word, updates_direction, repeatable)
     M._to_char(
         word,
         false,
